@@ -1,0 +1,10 @@
+fetch('https://gaia.solid.community/public/blog/blat.txt').
+    then( response => response.text() ).
+    then(myblob=>{console.log(myblob)});
+solid.auth.fetch(
+    'https://gaia.solid.community/public/blog/blat.txt',
+    {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: "ho davvero scritto!" }
+    ).
+    then(res=>res.text()).
+    then(response => console.log('Success:', Response)).
+    catch(error => console.error('Error:', error));

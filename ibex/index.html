@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>IBEX</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<style>
+  .post   {
+	border: solid black 1px;
+	padding: 1em;
+  }
+</style>
+<body>
+	<img src="/pic/ibex.jpg" alt="IBEX" style="float:right;width:184px;height:200px;">
+  <h1>IBEX <span id="origin"></span></h1>
+  <p id="login">
+    You are not logged in.
+    <button id="loginbutton">log in</button>
+  </p>
+  <div id="logout">
+    <p> You are logged in as <span id="user"></span>.</p>
+    <button id="logoutbutton">log out</button>
+  <div>
+    <h2>My Blog</h2>
+    <div id="createNewPost">
+      <button class="newPost">Write something!</button>
+    </div>
+    <div id="publishNewPost" >
+	    <!---        <div>there could be an editable slug here</div> -->
+        <button class="publish">Publish!</button><button class="newPost">Edit</button>
+        <pre id="blogtext" class="source"></pre>
+      </div>
+    <h2>Darcy Feed</h2>
+    <div id="feed">
+      
+    </div>
+  </div>
+  </div>
+ 
+  <script src="scripts/jquery.js"></script>
+  <script src="scripts/solid-auth-client.bundle.js"></script>
+  <script src="scripts/rdflib.min.js"></script>
+  <script src="scripts/ibex.js" defer></script>
+  <script src="scripts/commonmark.min.js"></script>
+
+</body>
+</html>

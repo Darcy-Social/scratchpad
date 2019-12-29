@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Profile Viewer</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <h1>IBEX <span id="origin"></span></h1>
+  <p id="login">
+    You are not logged in.
+    <button id="loginbutton">log in</button>
+  </p>
+  <p id="logout">
+    You are logged in as <span id="user"></span>.
+    <button id="logoutbutton">log out</button>
+  </p>
+  <div>
+    <h2>My Blog</h2>
+    <button>write a post!</button>
+    <div id="posts"></div>
+  </div>
+ 
+  <script src="scripts/jquery.js"></script>
+  <script src="scripts/solid-auth-client.bundle.js"></script>
+  <script src="scripts/rdflib.min.js"></script>
+  <script src="scripts/ibex.js"></script>
+</body>
+</html>
