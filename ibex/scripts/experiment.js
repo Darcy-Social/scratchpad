@@ -25,7 +25,7 @@ $('#view').click(async function loadProfile() {
   const fetcher = new $rdf.Fetcher(store);
 
   // Load the person's data into the store
-  const person = $('#profile').val();
+  const person = $('#user').text();
   await fetcher.load(person);
 
   // Display their details
