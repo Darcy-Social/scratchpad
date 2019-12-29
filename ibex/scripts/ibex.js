@@ -87,7 +87,7 @@ $('.publish').click(
 );
 
 function notifyDarcy(url){
-  $.post('https://darcy.darcy.is/feed.php', JSON.stringify( { url : url }), ()=>{ updateUI(); }); 
+  $.post('https://ibex.darcy.is/feed.php', JSON.stringify( { url : url }), ()=>{ updateUI(); }); 
 }
 
 /*
