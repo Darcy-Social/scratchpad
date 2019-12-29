@@ -46,7 +46,7 @@ function updateUI(){
     $('#createNewPost').show();
     $('#publishNewPost').hide();
   }
-  $.get('https://darcy.darcy.is/feed.php',function(data){ 
+  $.get('https://ibex.darcy.is/feed.php',function(data){ 
 	  $('#feed').empty();
 
 	  data.forEach(aPost => {
@@ -85,6 +85,7 @@ $('.publish').click(
             });
     }
 );
+
 
 function notifyDarcy(url){
   $.post('https://ibex.darcy.is/feed.php', JSON.stringify( { url : url }), ()=>{ updateUI(); }); 
