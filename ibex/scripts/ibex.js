@@ -50,40 +50,42 @@ function updateUI(){
 	  $('#feed').empty();
 
 	  data.forEach(aPost => {
-		  $('#feed').append( $('<div>').addClass('post').append($('<h4>').text(aPost['domain'] + ' '+aPost['last_update']), $('<div>').html( writer.render(reader.parse(aPost.body))  ) )  )} )});
-
+		  $('#feed').append(
+        $('<div>').addClass('post').append($('<h4>').text(
+          aPost['domain'] + ' '+aPost['last_update']),
+        $('<div>').html( writer.render(reader.parse(aPost.body))  ) )  
+    ) 
+    })
+  });
 }
 
 
 $('.newPost').click( () => {window.location = './editor.html'});
 
 $('.publish').click(
-    () => {
+  () => {
 
-        let totalResponse = '';
+    if (!window.localStorage['content']){ return }
+	  let url = $('#origin').text()+'/public/darcy/post-'+new Date().toISOString()+'.md';
 
-        if (!window.localStorage['content']){ return }
-	let url = $('#origin').text()+'/public/darcy/post-'+new Date().toISOString()+'.md';
-
-        solid.auth.fetch(
-            url,
-            {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: window.localStorage['content'] }
-            ).
-            then(res=>res.text()).
-            then(response => {
+    solid.auth.fetch(
+      url,
+      {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: window.localStorage['content'] }
+      ).
+      then(response => {
+          if (response == 'Created'){  
 		if (response == 'Created'){  
-                  delete window.localStorage['content'];
-		}
-                updateUI();
-		notifyDarcy(url );
-
-
-            }).
-            catch(error => {
-                alert('Error:'+ error);
-                updateUI();
-            });
-    }
+          if (response == 'Created'){  
+              delete window.localStorage['content'];
+          }
+          updateUI();
+          notifyDarcy(url );
+      }).
+      catch(error => {
+        alert('Error:'+ error);
+        updateUI();
+      });
+  }
 );
 
 
@@ -101,4 +103,78 @@ btoa( // base64 so url-safe
     );
     */
 
+
+// new api stuff
+
+/**
+ * returns a nice url-compatible date string
+ * @param {Date} date 
+ */
+function ts(date){
+  date = date || new Date;
+  return date.toISOString().replace(/:/g,'.');
+}
+  
+
+
+/**
+ * gets all the darcy posts in a pod
+ * the pod must point to the root of the pod, and include a slash
+ * @param {String} pod 
+ * 
+ * example : getPosts( "https://gaia.solid.community/" ).then( contents =>{ console.log(contents);});
+ */
+function getPosts(pod){
+
+  const LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
+  let store = $rdf.graph();
+
+  const fetcher = new $rdf.Fetcher(store);
+
+  let folder = $rdf.sym(pod+"public/darcy/posts/");
+
+  return new Promise(function(resolve,reject){
+      fetcher.load(folder).then(() => {
+          folderItems = store.each(
+              folder,
+              LDP("contains"),
+              null
+          );
+
+          resolve(folderItems);
+      });
+  });
+}
+
+
+
+// 
+/**
+ * posts a new comment to a pod
+ * the pod must point to the root of the pod, and include a slash
+ * @param {String} pod 
+ * @param {String} text 
+ * 
+ * example : publishPost( "https://gaia.solid.community/","test api!" ).then( response =>{ console.log(response);});
+ */
+function publishPost(pod,text){
+
+  let url = pod+'/public/darcy/posts/post-'+ts()+'.md';
+
+  return new Promise(function(resolve,reject){
+      solid.auth.fetch(
+          url,
+          {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: text }
+          ).
+      then(response => {
+          //console.log("ok we got a response");
+          //console.log(response);
+          if (response && response['statusText'] == 'Created'){  
+              resolve(response);
+          }
+          reject(response)
+
+      });
+    });
+}
                                                                        
