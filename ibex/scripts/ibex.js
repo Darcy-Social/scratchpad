@@ -171,3 +171,39 @@ function publishPost(pod,text){
     });
 }
                                                                        
+
+/**
+ * grabs the webids this person has as so-called friends
+ * might be worth to cache it
+ *  
+ * @param {String} webid 
+ * 
+ * example: listFriends("https://gaia.solid.community/profile/card#me").then(console.log);
+ */
+function listFriends(webid){
+  const store = $rdf.graph();
+  const fetcher = new $rdf.Fetcher(store);
+
+  return fetcher.load(webid).then(
+    () => {
+      return store.each($rdf.sym(webid), FOAF('knows'))
+    }
+  );
+};
+
+/**
+ * resolves a webid's name
+ * @param {String} webid 
+ * 
+ * example: getName("https://jollyorc.solid.community/profile/card#me").then( console.log);
+ * 
+ */
+async function getName(webid){
+  const store = $rdf.graph();
+  const fetcher = new $rdf.Fetcher(store);
+  await fetcher.load(webid);
+  const fullName = store.any($rdf.sym(webid), FOAF('name'));
+  return ( fullName && fullName.value || friend.value);
+  
+}
+
