@@ -66,24 +66,19 @@ $('.publish').click(
   () => {
 
     if (!window.localStorage['content']){ return }
-	  let url = $('#origin').text()+'/public/darcy/post-'+new Date().toISOString()+'.md';
 
-    solid.auth.fetch(
-      url,
-      {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: window.localStorage['content'] }
-      ).
-      then(response => {
-          if (response == 'Created'){  
-		if (response == 'Created'){  
-          if (response == 'Created'){  
-              delete window.localStorage['content'];
-          }
-          updateUI();
-          notifyDarcy(url );
-      }).
-      catch(error => {
-        alert('Error:'+ error);
+    let text = window.localStorage['content'];
+
+    publishPost( $('#origin').text()+"/",text ).
+      then( response =>{ console.log(response);
+        delete window.localStorage['content'];
+        console.log(response);
         updateUI();
+        notifyDarcy(response.url );
+      }).
+      catch( response => {
+        alert('Error:'+ response.status);
+        console.log(response);
       });
   }
 );
@@ -114,8 +109,6 @@ function ts(date){
   date = date || new Date;
   return date.toISOString().replace(/:/g,'.');
 }
-  
-
 
 /**
  * gets all the darcy posts in a pod
