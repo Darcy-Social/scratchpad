@@ -147,14 +147,10 @@ function publishPost(pod,text){
 
   let url = getDarcyPostURL(pod,ts());
 
-  return new Promise(function(resolve,reject){
-      solid.auth.fetch(
-          url,
-          {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: text }
-          ).
-      then(response => {
-          //console.log("ok we got a response");
-          //console.log(response);
+  return new Promise(
+    function(resolve,reject){
+      solid.auth.fetch( url, {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: text } ).
+        then(response => {
           if (response && response['statusText'] == 'Created'){  
               resolve(response);
               return;
@@ -179,19 +175,19 @@ function publishComment(pod,originalContentURL,text){
       then(response => {
         if (response && response['statusText'] == 'Created'){  
             console.log("ok, we created a comment, let's notify the post owner")
+            if (URLReferenceToComment){
+              return solid.auth.fetch(
+                URLReferenceToComment,
+                {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: urlComment }
+                );
+            }
 
-            return solid.auth.fetch(
-              URLReferenceToComment,
-              {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: urlComment }
-              );
+
         }
         else {
           reject(response)
         }
       });
-
-
-
 
     });
 }
@@ -204,7 +200,9 @@ function getDarcyPostURL(pod,slug){
 function getDarcyContentURL(pod,slug,type){
   type = stabilizeURLFragment(type);
   slug = stabilizeURLFragment(slug);
-  return darcyRootPath(pod)+type+'/'+slug+'.'+type;
+
+  let path = (type == 'post') ? 'post' : 'activity';
+  return darcyRootPath(pod)+path+'/'+slug+'.'+type;
 }
 
 function stabilizeURLFragment(fragment){
@@ -212,21 +210,35 @@ function stabilizeURLFragment(fragment){
 }
 
 function darcyRootPath(pod){
-  return pod+'/public/darcy/'
+  return pod+'public/darcy/'
 }
 
 
+
+/**
+ * getDarcyPingbackURL("https://giulio.solid.community/public/darcy/post/2020-01-02T14.50.54.892Z.post", "gaia.solid.community",ts(),"comment" )
+ */
 
 function getDarcyPingbackURL(originalContentURL,pod,slug,type){
 
   let backlinkFilename = url_domain(pod)+'_'+stabilizeURLFragment(slug)+'_'+stabilizeURLFragment(type);
 
-  //replace extension of original post with ".activity"
-  let resultPath = originalContentURL.replace(/\.\w*?$/,'.activity/');
-  if (resultPath == originalContentURL){ return null; }
+  //find the slug of the original content to create an activity folder for it
+
+  originalContentFileName = originalContentURL.slice(originalContentURL.lastIndexOf('/')+1);
+
+  let ocPath = originalContentFileName.replace(/\.\w*?$/,'');
+  if (ocPath == originalContentFileName){ return null; }
+
+  let activitySlug = ocPath.slice(ocPath.indexOf('/')+1);
+
+  if (!activitySlug){ return null; }
+
+  let resultPath = getDarcyContentURL(url_domain(originalContentURL),activitySlug,"comment");
+
 
   // staple filename at the end of path
-  return resultPath+backlinkFilename;
+  return resultPath+'/'+backlinkFilename;
 }
 
 function getDarcyContentURLFromDarcyPingbackURL(pingbackURL){
