@@ -8,3 +8,19 @@ solid.auth.fetch(
     then(res=>res.text()).
     then(response => console.log('Success:', Response)).
     catch(error => console.error('Error:', error));
+
+
+// creates folder
+
+solid.auth.fetch(
+        "https://nada.solid.community/public/darcy/activity/",
+        {method: 'POST', headers:{'Content-Type': 'text/turtle',
+	    'Link': '<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"',"Slug": "whatever.post"}  }
+        );
+
+
+
+solid.auth.fetch(
+        "https://nada.solid.community/public/darcy/activity/whatever.post",
+        {method: 'POST', headers:{'Content-Type': 'text/plain', "Slug": "gaia.solid.community_foo-_comment"}, body:"ciao!"  }
+        );
