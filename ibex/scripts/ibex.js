@@ -191,12 +191,27 @@ function publishComment(pod,originalContentURL,text){
 
     });
 }
+
+/**
+ * used to generate the local url to store the pod owner's own comments.
+ * used with getDarcyPingbackURL() to post pingbacks on a different pod
+ * 
+ * @param {*} pod 
+ * @param {*} slug 
+ */
 function getDarcyCommentURL(pod,slug){
   return getDarcyContentURL(pod, slug, 'comment');
 }
 function getDarcyPostURL(pod,slug){
   return getDarcyContentURL(pod, slug, 'post');
 }
+
+/**
+ * DO NOT USE FOR PINGBACKS
+ * @param {*} pod 
+ * @param {*} slug 
+ * @param {*} type 
+ */
 function getDarcyContentURL(pod,slug,type){
   type = stabilizeURLFragment(type);
   slug = stabilizeURLFragment(slug);
@@ -209,37 +224,28 @@ function stabilizeURLFragment(fragment){
   return fragment.replace(/[^a-z0-9.-]/gi,'-');
 }
 
-function darcyRootPath(pod){
-  return pod+'public/darcy/'
-}
 
 
 
 /**
- * getDarcyPingbackURL("https://giulio.solid.community/public/darcy/post/2020-01-02T14.50.54.892Z.post", "gaia.solid.community",ts(),"comment" )
+ * generates a pingback url to PUT to the original content pod
+ * @param {*} originalContentURL 
+ * @param {*} pod 
+ * @param {*} slug 
+ * @param {*} pingbackType 
+ * 
+ * getDarcyPingbackURL("https://giulio.solid.community/public/darcy/post/2020-01-02T14.50.54.892Z.post", "https://gaia.solid.community/",ts(),"comment" )
  */
 
-function getDarcyPingbackURL(originalContentURL,pod,slug,type){
-
-  let backlinkFilename = url_domain(pod)+'_'+stabilizeURLFragment(slug)+'_'+stabilizeURLFragment(type);
+function getDarcyPingbackURL(originalContentURL,pod,slug,pingbackType){
+  let backlinkFilename = url_domain(pod)+'_'+stabilizeURLFragment(slug)+'_'+stabilizeURLFragment(pingbackType);
 
   //find the slug of the original content to create an activity folder for it
-
-  originalContentFileName = originalContentURL.slice(originalContentURL.lastIndexOf('/')+1);
-
-  let ocPath = originalContentFileName.replace(/\.\w*?$/,'');
-  if (ocPath == originalContentFileName){ return null; }
-
-  let activitySlug = ocPath.slice(ocPath.indexOf('/')+1);
-
-  if (!activitySlug){ return null; }
-
-  let resultPath = getDarcyContentURL(url_domain(originalContentURL),activitySlug,"comment");
-
-
-  // staple filename at the end of path
-  return resultPath+'/'+backlinkFilename;
+  let ocFileName = originalContentURL.slice(originalContentURL.lastIndexOf('/')+1);
+  if (!ocFileName){ return null; }
+  return darcyRootPath(getPodFromPodPath(originalContentURL))+"activity/"+ocFileName+'/'+backlinkFilename;
 }
+
 
 function getDarcyContentURLFromDarcyPingbackURL(pingbackURL){
   let elements = pingbackURL.slice(pingbackURL.lastIndexOf('/')+1).split('_');
@@ -284,8 +290,16 @@ async function getName(webid){
   
 }
 
+
+function darcyRootPath(pod){
+  return pod+'public/darcy/'
+}
 function getPodFromWebid(webid){
-  return 'https://'+url_domain(webid)+'/';
+  return getPodFromPodPath(webid);
+}
+
+function getPodFromPodPath(path){
+  return 'https://'+url_domain(path)+'/';
 }
 
 function url_domain(url) {
@@ -302,3 +316,11 @@ function ts(date){
   date = date || new Date;
   return date.toISOString().replace(/:/g,'.');
 }
+
+
+
+console.assert(
+  getDarcyPingbackURL("https://giulio.solid.community/public/darcy/post/2020-01-02T14.50.54.892Z.post", "https://gaia.solid.community/","foo!","comment" )
+    ==
+  "https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/gaia.solid.community_foo-_comment",
+  "pingback urls not generated correctly");
