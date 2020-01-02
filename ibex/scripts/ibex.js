@@ -182,25 +182,13 @@ function publishComment(pod,originalContentURL,text){
 
             return solid.auth.fetch(
               URLReferenceToComment,
-              {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: URLReferenceToComment }
+              {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: urlComment }
               );
         }
         else {
           reject(response)
         }
-      }).
-      then( reponse => {
-        
-        console.log("ok, we posted a comment notification, maybe")
-        if (response && response['statusText'] == 'Created'){  
-          console.log("SUCCESS")
-          resolve(response);
-        }
-        else {
-          reject(response)
-        }
       });
-
 
 
 
@@ -242,9 +230,9 @@ function getDarcyPingbackURL(originalContentURL,pod,slug,type){
 }
 
 function getDarcyContentURLFromDarcyPingbackURL(pingbackURL){
-  let elements = pingbackURL.slice(pingbackURL.lastIndexOf('/')).split('_');
+  let elements = pingbackURL.slice(pingbackURL.lastIndexOf('/')+1).split('_');
   if (elements.length != 3){ return null; }
-  return getDarcyContentURL(elements[0], elements[1], elements[2]);
+  return getDarcyContentURL("https://"+elements[0], elements[1], elements[2]);
 }
 
 
