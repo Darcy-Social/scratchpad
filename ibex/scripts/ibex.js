@@ -175,7 +175,7 @@ function publishComment(pod,originalContentURL,text){
 
   return new Promise(function(resolve,reject){
       solid.auth.fetch(
-        url,
+        urlComment,
         {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: text }
         ).
       then(response => {
@@ -183,8 +183,8 @@ function publishComment(pod,originalContentURL,text){
             console.log("ok, we created a comment, let's notify the post owner")
 
             return solid.auth.fetch(
-              url,
-              {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: text }
+              URLReferenceToComment,
+              {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: URLReferenceToComment }
               );
         }
         else {
