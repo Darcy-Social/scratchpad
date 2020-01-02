@@ -231,7 +231,7 @@ function darcyRootPath(pod){
 
 function getDarcyPingbackURL(originalContentURL,pod,slug,type){
 
-  let backlinkFilename = pod+'_'+stabilizeURLFragment(slug)+'_'+stabilizeURLFragment(type);
+  let backlinkFilename = url_domain(pod)+'_'+stabilizeURLFragment(slug)+'_'+stabilizeURLFragment(type);
 
   //replace extension of original post with ".activity"
   let resultPath = originalContentURL.replace(/\.\w*?$/,'.activity/');
