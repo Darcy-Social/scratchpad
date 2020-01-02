@@ -170,8 +170,6 @@ function publishComment(pod,originalContentURL,text){
   let slug = ts();
   let urlComment = getDarcyCommentURL(pod,slug);
   let URLReferenceToComment = getDarcyPingbackURL(originalContentURL,pod,slug,'comment');
-  
-  let urlNotification = get();
 
   return new Promise(function(resolve,reject){
       solid.auth.fetch(
