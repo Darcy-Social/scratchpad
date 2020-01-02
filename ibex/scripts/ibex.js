@@ -134,6 +134,10 @@ function getPosts(pod){
 
 
 
+function getPostComments(postURL){
+  //TODO PAOLO DO ME
+}
+
 // 
 /**
  * posts a new comment to a pod
@@ -181,8 +185,6 @@ function publishComment(pod,originalContentURL,text){
                 {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: urlComment }
                 );
             }
-
-
         }
         else {
           reject(response)
@@ -224,9 +226,6 @@ function stabilizeURLFragment(fragment){
   return fragment.replace(/[^a-z0-9.-]/gi,'-');
 }
 
-
-
-
 /**
  * generates a pingback url to PUT to the original content pod
  * @param {*} originalContentURL 
@@ -240,17 +239,25 @@ function stabilizeURLFragment(fragment){
 function getDarcyPingbackURL(originalContentURL,pod,slug,pingbackType){
   let backlinkFilename = url_domain(pod)+'_'+stabilizeURLFragment(slug)+'_'+stabilizeURLFragment(pingbackType);
 
+  let pingbackPath = getDarcyPingbackPath(originalContentURL);
+  if(!pingbackPath){ return null; }
+
+  return pingbackPath+backlinkFilename;
+}
+
+function getDarcyPingbackPath(originalContentURL){
+
   //find the slug of the original content to create an activity folder for it
   let ocFileName = originalContentURL.slice(originalContentURL.lastIndexOf('/')+1);
   if (!ocFileName){ return null; }
-  return darcyRootPath(getPodFromPodPath(originalContentURL))+"activity/"+ocFileName+'/'+backlinkFilename;
+  return darcyRootPath(getPodFromPodPath(originalContentURL))+"activity/"+ocFileName+'/';
 }
 
 
 function getDarcyContentURLFromDarcyPingbackURL(pingbackURL){
   let elements = pingbackURL.slice(pingbackURL.lastIndexOf('/')+1).split('_');
   if (elements.length != 3){ return null; }
-  return getDarcyContentURL("https://"+elements[0], elements[1], elements[2]);
+  return getDarcyContentURL("https://"+elements[0]+"/", elements[1], elements[2]);
 }
 
 
@@ -324,3 +331,19 @@ console.assert(
     ==
   "https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/gaia.solid.community_foo-_comment",
   "pingback urls not generated correctly");
+
+
+
+console.assert(
+  getDarcyContentURLFromDarcyPingbackURL("https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/gaia.solid.community_foo-_comment")
+    ==
+  "https://gaia.solid.community/public/darcy/activity/foo-.comment",
+  "pingback urls not resolved correctly");
+
+
+console.assert(
+  getDarcyContentURLFromDarcyPingbackURL("gaia.solid.commundity_foo-_comment")
+    ==
+  getDarcyContentURLFromDarcyPingbackURL("https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/gaia.solid.community_foo-_comment")
+  
+)
