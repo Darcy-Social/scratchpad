@@ -101,14 +101,6 @@ btoa( // base64 so url-safe
 
 // new api stuff
 
-/**
- * returns a nice url-compatible date string
- * @param {Date} date 
- */
-function ts(date){
-  date = date || new Date;
-  return date.toISOString().replace(/:/g,'.');
-}
 
 /**
  * gets all the darcy posts in a pod
@@ -124,7 +116,7 @@ function getPosts(pod){
 
   const fetcher = new $rdf.Fetcher(store);
 
-  let folder = $rdf.sym(pod+"public/darcy/posts/");
+  let folder = $rdf.sym(darcyRootPath(pod)+"post/");
 
   return new Promise(function(resolve,reject){
       fetcher.load(folder).then(() => {
@@ -141,6 +133,7 @@ function getPosts(pod){
 
 
 
+
 // 
 /**
  * posts a new comment to a pod
@@ -152,7 +145,7 @@ function getPosts(pod){
  */
 function publishPost(pod,text){
 
-  let url = pod+'/public/darcy/posts/post-'+ts()+'.md';
+  let url = getDarcyPostURL(pod,ts());
 
   return new Promise(function(resolve,reject){
       solid.auth.fetch(
@@ -164,17 +157,103 @@ function publishPost(pod,text){
           //console.log(response);
           if (response && response['statusText'] == 'Created'){  
               resolve(response);
+              return;
           }
           reject(response)
 
       });
     });
 }
-                                                                       
+
+function publishComment(pod,originalContentURL,text){
+
+  let slug = ts();
+  let urlComment = getDarcyCommentURL(pod,slug);
+  let URLReferenceToComment = getDarcyPingbackURL(originalContentURL,pod,slug,'comment');
+  
+  let urlNotification = get();
+
+  return new Promise(function(resolve,reject){
+      solid.auth.fetch(
+        url,
+        {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: text }
+        ).
+      then(response => {
+        if (response && response['statusText'] == 'Created'){  
+            console.log("ok, we created a comment, let's notify the post owner")
+
+            return solid.auth.fetch(
+              url,
+              {method: 'PUT', headers:{'Content-Type': 'text/plain'}, body: text }
+              );
+        }
+        else {
+          reject(response)
+        }
+      }).
+      then( reponse => {
+        
+        console.log("ok, we posted a comment notification, maybe")
+        if (response && response['statusText'] == 'Created'){  
+          console.log("SUCCESS")
+          resolve(response);
+        }
+        else {
+          reject(response)
+        }
+      });
+
+
+
+
+
+    });
+}
+function getDarcyCommentURL(pod,slug){
+  return getDarcyContentURL(pod, slug, 'comment');
+}
+function getDarcyPostURL(pod,slug){
+  return getDarcyContentURL(pod, slug, 'post');
+}
+function getDarcyContentURL(pod,slug,type){
+  type = stabilizeURLFragment(type);
+  slug = stabilizeURLFragment(slug);
+  return darcyRootPath(pod)+type+'/'+slug+'.'+type;
+}
+
+function stabilizeURLFragment(fragment){
+  return fragment.replace(/[^a-z0-9.-]/gi,'-');
+}
+
+function darcyRootPath(pod){
+  return pod+'/public/darcy/'
+}
+
+
+
+function getDarcyPingbackURL(originalContentURL,pod,slug,type){
+
+  let backlinkFilename = pod+'_'+stabilizeURLFragment(slug)+'_'+stabilizeURLFragment(type);
+
+  //replace extension of original post with ".activity"
+  let resultPath = originalContentURL.replace(/\.\w*?$/,'.activity/');
+  if (resultPath == originalContentURL){ return null; }
+
+  // staple filename at the end of path
+  return resultPath+backlinkFilename;
+}
+
+function getDarcyContentURLFromDarcyPingbackURL(pingbackURL){
+  let elements = pingbackURL.slice(pingbackURL.lastIndexOf('/')).split('_');
+  if (elements.length != 3){ return null; }
+  return getDarcyContentURL(elements[0], elements[1], elements[2]);
+}
+
+
 
 /**
  * grabs the webids this person has as so-called friends
- * might be worth to cache it
+ * might be worth to cache the result
  *  
  * @param {String} webid 
  * 
@@ -207,3 +286,21 @@ async function getName(webid){
   
 }
 
+function getPodFromWebid(webid){
+  return 'https://'+url_domain(webid)+'/';
+}
+
+function url_domain(url) {
+  var    a      = document.createElement('a');
+         a.href = url;
+  return a.hostname;
+}
+
+/**
+ * returns a nice url-compatible date string
+ * @param {Date} date 
+ */
+function ts(date){
+  date = date || new Date;
+  return date.toISOString().replace(/:/g,'.');
+}
