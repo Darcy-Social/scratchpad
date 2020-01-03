@@ -45,10 +45,6 @@ function getComments(postURL){
     let store = $rdf.graph();
   
     const fetcher = new $rdf.Fetcher(store);
-
-    const [postslug, postPath] = basePath(postURL);
-    console.log("ROOTPATH");
-    console.log(darcyRootPath( url_domain( postURL)));
   
     let folder = $rdf.sym(getDarcyPingbackPath(postURL));
     console.log(folder);
@@ -62,7 +58,7 @@ function getComments(postURL){
             ).map(t => { return resolvePingbackURL(t["value"])});
   
             resolve(folderItems);
-        });
+        }).catch(()=>{ return []; });
     });
   }
   
