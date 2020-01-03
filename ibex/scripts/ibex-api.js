@@ -33,8 +33,37 @@ function getPosts(pod){
   
   
   
-  function getPostComments(postURL){
-    //TODO PAOLO DO ME
+/**
+ * gets all the darcy comment URLs of a post
+ * @param {String} postURL 
+ * 
+ * example : getComments("https://giulio.solid.community/public/darcy/post/2020-01-03TFOOOO.post").then(console.log);
+ */
+function getComments(postURL){
+
+    const LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
+    let store = $rdf.graph();
+  
+    const fetcher = new $rdf.Fetcher(store);
+
+    const [postslug, postPath] = basePath(postURL);
+    console.log("ROOTPATH");
+    console.log(darcyRootPath( url_domain( postURL)));
+  
+    let folder = $rdf.sym(getDarcyPingbackPath(postURL));
+    console.log(folder);
+  
+    return new Promise(function(resolve,reject){
+        fetcher.load(folder).then(() => {
+            folderItems = store.each(
+                folder,
+                LDP("contains"),
+                null
+            ).map(t => { return resolvePingbackURL(t["value"])});
+  
+            resolve(folderItems);
+        });
+    });
   }
   
   // 
