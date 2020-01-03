@@ -194,6 +194,68 @@ function publishComment(pod,originalContentURL,text){
     });
 }
 
+function fetchP(url, pars){
+
+  return new Promise(
+    function(resolve, reject) {
+      solid.auth.fetch(
+        url,
+        pars
+      ).then( response =>{
+        if (!response || response['statusText'] != 'Created'){
+          reject(Error({ response: response}));
+        } else {
+          resolve(response);
+        }
+      })
+    }
+  );
+}
+
+function publishComment2(pod,originalContentURL,text){
+  console.log("creating activity folder for post");
+  let ocSlug = "foo";
+
+  let pingbackFileName = getDarcyPingbackFileName(pod,ts(),"comment");
+  let pingbackPath = getDarcyPingbackPath(originalContentURL);
+  let [ocFolderName,activityPath] = baseName();
+  
+  fetchP(
+    activityPath,
+    {
+      method: 'POST',
+      headers:{'Content-Type': 'text/turtle', 'Link': '<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"',"Slug": ocFolderName}
+    }
+  ).then( response =>{
+    
+    console.log("folder created");
+
+    console.log(response);
+    console.log("creating file");
+    return fetchP(
+      pingbackPath,
+      {
+        method: 'POST',
+        headers:{'Content-Type': 'text/plain',"Slug": pingbackFileName},
+        body: text
+      });
+    
+
+  }).then( response =>{
+    console.log("file created");
+    console.log(response);
+  }).catch( (e) =>{
+    console.log(e);
+    
+  });
+
+}
+
+
+
+
+
+
 /**
  * used to generate the local url to store the pod owner's own comments.
  * used with getDarcyPingbackURL() to post pingbacks on a different pod
@@ -237,28 +299,37 @@ function stabilizeURLFragment(fragment){
  */
 
 function getDarcyPingbackURL(originalContentURL,pod,slug,pingbackType){
-  let backlinkFilename = url_domain(pod)+'_'+stabilizeURLFragment(slug)+'_'+stabilizeURLFragment(pingbackType);
 
   let pingbackPath = getDarcyPingbackPath(originalContentURL);
   if(!pingbackPath){ return null; }
 
-  return pingbackPath+backlinkFilename;
+  return pingbackPath+getDarcyPingbackFileName(pod,slug,pingbackType);
+}
+
+function getDarcyPingbackFileName(pod,slug,pingbackType){
+  return "DARCY_"+url_domain(pod)+'_'+stabilizeURLFragment(slug)+'_'+stabilizeURLFragment(pingbackType)+".txt";
 }
 
 function getDarcyPingbackPath(originalContentURL){
-
   //find the slug of the original content to create an activity folder for it
   let ocFileName = originalContentURL.slice(originalContentURL.lastIndexOf('/')+1);
   if (!ocFileName){ return null; }
   return darcyRootPath(getPodFromPodPath(originalContentURL))+"activity/"+ocFileName+'/';
 }
 
+function resolvePingbackURL(pingbackURL){
+  return getDarcyContentURLFromDarcyPingbackURL(pingbackURL);
+}
 
 function getDarcyContentURLFromDarcyPingbackURL(pingbackURL){
-  let elements = pingbackURL.slice(pingbackURL.lastIndexOf('/')+1).split('_');
-  if (elements.length != 3){ return null; }
-  return getDarcyContentURL("https://"+elements[0]+"/", elements[1], elements[2]);
+  let elements = pingbackURL.replace(/\.txt$/,'').slice(pingbackURL.lastIndexOf('/')+1).split('_');
+  if (elements.length != 4){ return null; }
+  if (elements[0] != "DARCY"){ return null; }
+  
+  return getDarcyContentURL("https://"+elements[1]+"/", elements[2], elements[3]);
 }
+
+
 
 
 
@@ -325,25 +396,44 @@ function ts(date){
 }
 
 
+function basePath(path){
+  const separator = "/";
+  if (path.slice(-1) == separator){
+    path = path.slice(0, -1);
+  }
+  const lastSeparatorPosition = path.lastIndexOf(separator);
+
+  return [
+    path.substr(lastSeparatorPosition + 1),
+    path.substr(0, lastSeparatorPosition + 1),
+  ];
+}
+
 
 console.assert(
   getDarcyPingbackURL("https://giulio.solid.community/public/darcy/post/2020-01-02T14.50.54.892Z.post", "https://gaia.solid.community/","foo!","comment" )
     ==
-  "https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/gaia.solid.community_foo-_comment",
+  "https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/DARCY_gaia.solid.community_foo-_comment.txt",
   "pingback urls not generated correctly");
 
 
 
 console.assert(
-  getDarcyContentURLFromDarcyPingbackURL("https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/gaia.solid.community_foo-_comment")
+  getDarcyContentURLFromDarcyPingbackURL("https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/DARCY_gaia.solid.community_foo-_comment.txt")
     ==
   "https://gaia.solid.community/public/darcy/activity/foo-.comment",
   "pingback urls not resolved correctly");
 
 
 console.assert(
-  getDarcyContentURLFromDarcyPingbackURL("gaia.solid.commundity_foo-_comment")
+  getDarcyContentURLFromDarcyPingbackURL("DARCY_gaia.solid.commundity_foo-_comment")
     ==
-  getDarcyContentURLFromDarcyPingbackURL("https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/gaia.solid.community_foo-_comment")
+  getDarcyContentURLFromDarcyPingbackURL("https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/DARCY_gaia.solid.community_foo-_comment.txt")
+  
+)
+console.assert(
+  getDarcyContentURLFromDarcyPingbackURL("DARCY_gaia.solid.commundity_foo-_comment")
+    ==
+  getDarcyContentURLFromDarcyPingbackURL("DARCY_gaia.solid.commundity_foo-_comment.txt")
   
 )
