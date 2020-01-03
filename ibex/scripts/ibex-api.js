@@ -309,14 +309,14 @@ function getPosts(pod){
   
   
   console.assert(
-    getDarcyContentURLFromDarcyPingbackURL("DARCY_gaia.solid.commundity_foo-_comment")
+    getDarcyContentURLFromDarcyPingbackURL("DARCY_gaia.solid.community_foo-_comment")
       ==
     getDarcyContentURLFromDarcyPingbackURL("https://giulio.solid.community/public/darcy/activity/2020-01-02T14.50.54.892Z.post/DARCY_gaia.solid.community_foo-_comment.txt")
     
   )
   console.assert(
-    getDarcyContentURLFromDarcyPingbackURL("DARCY_gaia.solid.commundity_foo-_comment")
+    getDarcyContentURLFromDarcyPingbackURL("DARCY_gaia.solid.community_foo-_comment")
       ==
-    getDarcyContentURLFromDarcyPingbackURL("DARCY_gaia.solid.commundity_foo-_comment.txt")
+    getDarcyContentURLFromDarcyPingbackURL("DARCY_gaia.solid.community_foo-_comment.txt")
     
   )
